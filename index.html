@@ -1,11 +1,83 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Моё Telegram Mini App</title>
+  <meta charset="UTF-8">
+  <title>Конструктор дымохода</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    label { display: block; margin-top: 1em; }
+    input, select { margin-top: 0.5em; }
+    #result { margin-top: 2em; padding: 1em; border: 1px solid #ccc; }
+    button { margin-top: 1.5em; }
+  </style>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <h1>Привет, Telegram!</h1>
-    <p>Это мой первый мини-приложение для Telegram.</p>
+  <h1>Конструктор дымохода</h1>
+  <form id="chimneyForm">
+    <label>Диаметр трубы (мм)
+      <select name="diameter" required>
+        <option value="115">115</option>
+        <option value="120">120</option>
+        <option value="150">150</option>
+        <option value="200">200</option>
+      </select>
+    </label>
+    <label>Высота (м)
+      <input type="number" name="height" min="2" max="10" value="5" required>
+    </label>
+    <label>Материал
+      <select name="material" required>
+        <option value="steel">Нержавеющая сталь</option>
+        <option value="ceramic">Керамика</option>
+      </select>
+    </label>
+    <label>Утепление
+      <select name="insulation" required>
+        <option value="none">Без утепления</option>
+        <option value="basic">Базовое</option>
+        <option value="premium">Премиум</option>
+      </select>
+    </label>
+    <button type="submit">Рассчитать</button>
+  </form>
+  <div id="result"></div>
+  <button id="sendBtn" style="display:none;">Отправить результат админу</button>
+
+  <script>
+    let resultText = '';
+    document.getElementById('chimneyForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this).entries());
+      let price = 10000 + Number(data.diameter) * 10 + Number(data.height) * 1000;
+      if(data.material === 'ceramic') price += 5000;
+      if(data.insulation === 'basic') price += 2000;
+      if(data.insulation === 'premium') price += 5000;
+      resultText = `
+        🚧 <b>Результат расчёта дымохода:</b>\n
+        • Диаметр: ${data.diameter} мм\n
+        • Высота: ${data.height} м\n
+        • Материал: ${data.material === 'steel' ? 'Нержавеющая сталь' : 'Керамика'}\n
+        • Утепление: ${
+          data.insulation === 'none' ? 'Без утепления' :
+          data.insulation === 'basic' ? 'Базовое' : 'Премиум'
+        }\n
+        <b>Ориентировочная цена: ${price} руб.</b>
+      `;
+      document.getElementById('result').innerHTML = resultText.replace(/\n/g, "<br>");
+      document.getElementById('sendBtn').style.display = "block";
+    });
+
+    // Отправка результата админу через Telegram Web Apps API
+    document.getElementById('sendBtn').onclick = function() {
+      if (window.Telegram && Telegram.WebApp) {
+        Telegram.WebApp.sendData(resultText); // Это отправит данные боту (они придут тебе как админу)
+        Telegram.WebApp.close(); // Закрывает мини-приложение автоматически
+      } else {
+        alert("Открывай через Telegram для отправки результата админу!");
+      }
+    };
+  </script>
 </body>
 </html>
