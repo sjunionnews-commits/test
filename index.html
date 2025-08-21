@@ -1,83 +1,136 @@
-import React, { useState } from "react";
-
-export default function App() {
-  const [step, setStep] = useState(1);
-  const [params, setParams] = useState({
-    diameter: 150,
-    height: 5,
-    material: "steel",
-    insulation: "none"
-  });
-
-  // Пример функции для отрисовки схемы
-  function ChimneySVG({diameter, height, material, insulation}) {
-    return (
-      <svg width="120" height="300">
-        <rect x="40" y="30" width={diameter/2} height={height*20} fill={material === "steel" ? "#bbb" : "#e7c19a"} stroke="#333" />
-        {insulation !== "none" && (
-          <rect x="35" y="25" width={diameter/2+10} height={height*20+10} fill={insulation === "basic" ? "#f0e68c99" : "#f0808099"} stroke="#888" />
-        )}
-      </svg>
-    );
-  }
-
-  return (
-    <div style={{maxWidth: 420, margin: "2em auto", background: "#fff", borderRadius: 12, boxShadow: "0 2px 10px #0001", padding: "2em"}}>
-      <h2>Конструктор дымохода</h2>
-      <ChimneySVG {...params} />
-      {step === 1 && (
-        <>
-          <label>Диаметр:
-            <input type="number" value={params.diameter} min={100} max={300}
-              onChange={e => setParams(p => ({...p, diameter: e.target.value}))} />
-          </label>
-          <button onClick={() => setStep(2)}>Далее</button>
-        </>
-      )}
-      {step === 2 && (
-        <>
-          <label>Высота, м:
-            <input type="number" value={params.height} min={2} max={12}
-              onChange={e => setParams(p => ({...p, height: e.target.value}))} />
-          </label>
-          <button onClick={() => setStep(3)}>Далее</button>
-        </>
-      )}
-      {step === 3 && (
-        <>
-          <label>Материал:
-            <select value={params.material} onChange={e => setParams(p => ({...p, material: e.target.value}))}>
-              <option value="steel">Нержавеющая сталь</option>
-              <option value="ceramic">Керамика</option>
-            </select>
-          </label>
-          <button onClick={() => setStep(4)}>Далее</button>
-        </>
-      )}
-      {step === 4 && (
-        <>
-          <label>Утепление:
-            <select value={params.insulation} onChange={e => setParams(p => ({...p, insulation: e.target.value}))}>
-              <option value="none">Без утепления</option>
-              <option value="basic">Базовое</option>
-              <option value="premium">Премиум</option>
-            </select>
-          </label>
-          <button onClick={() => setStep(5)}>Показать итог</button>
-        </>
-      )}
-      {step === 5 && (
-        <>
-          <h4>Итог:</h4>
-          <ul>
-            <li>Диаметр: {params.diameter} мм</li>
-            <li>Высота: {params.height} м</li>
-            <li>Материал: {params.material === "steel" ? "Нержавеющая сталь" : "Керамика"}</li>
-            <li>Утепление: {params.insulation}</li>
-          </ul>
-          <button>Отправить админу</button>
-        </>
-      )}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Конструктор дымохода</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6fa; margin: 0; padding: 0; }
+    .container { max-width: 430px; margin: 32px auto; padding: 24px 18px 18px 18px; background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.07);}
+    h1 { text-align: center; font-size: 1.5em; margin-bottom: 1em; }
+    label { display: block; margin-top: 1em; }
+    select, input[type="number"] { width: 100%; padding: 8px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; font-size: 1em;}
+    button { width: 100%; padding: 10px; background: #229ED9; color: #fff; border: none; border-radius: 6px; font-size: 1.1em; cursor: pointer; margin-top: 1.5em;}
+    button:hover { background: #177fae; }
+    #result { margin-top: 2em; padding: 1em; background: #e9f7fb; border: 1px solid #bee6f5; border-radius: 6px;}
+    .svg-wrap { display: flex; justify-content: center; align-items: flex-end; min-height: 220px; }
+    .legend { margin-top: 1em; font-size: 0.95em; color: #555;}
+    .legend span { display: inline-block; width: 14px; height: 14px; vertical-align: middle; margin-right: 6px; border-radius: 2px;}
+    .steel { background: #b0bec5; }
+    .ceramic { background: #ffe0b2; }
+    .insul-basic { background: #f0e68c; }
+    .insul-premium { background: #ffcccb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Конструктор дымохода</h1>
+    <form id="chimneyForm">
+      <label>
+        Диаметр трубы (мм)
+        <select name="diameter" id="diameter" required>
+          <option value="115">115</option>
+          <option value="120">120</option>
+          <option value="150">150</option>
+          <option value="200">200</option>
+        </select>
+      </label>
+      <label>
+        Высота (м)
+        <input type="number" name="height" id="height" min="2" max="12" value="5" required>
+      </label>
+      <label>
+        Материал
+        <select name="material" id="material" required>
+          <option value="steel">Нержавеющая сталь</option>
+          <option value="ceramic">Керамика</option>
+        </select>
+      </label>
+      <label>
+        Утепление
+        <select name="insulation" id="insulation" required>
+          <option value="none">Без утепления</option>
+          <option value="basic">Базовое</option>
+          <option value="premium">Премиум</option>
+        </select>
+      </label>
+      <button type="submit">Рассчитать</button>
+    </form>
+    <div class="svg-wrap" id="chimney-vis"></div>
+    <div class="legend">
+      <span class="steel"></span>Нерж. сталь
+      <span class="ceramic" style="margin-left:10px;"></span>Керамика
+      <span class="insul-basic" style="margin-left:10px;"></span>Баз. утепление
+      <span class="insul-premium" style="margin-left:10px;"></span>Премиум утепление
     </div>
-  );
-}
+    <div id="result"></div>
+  </div>
+  <script>
+    function renderChimney({diameter, height, material, insulation}) {
+      // размеры для визуализации
+      const svgH = 200, svgW = 90;
+      const baseY = svgH - 10, baseX = svgW/2;
+      const visHeight = Math.max(24, Math.min(160, height * 13)); // 2м = 26px, 12м = 156px
+      const visDiameter = Math.max(22, Math.min(52, diameter / 4)); // 115мм = 28px, 200мм = 50px
+      // цвета
+      const matColor = material === "steel" ? "#b0bec5" : "#ffe0b2";
+      const insulColor = insulation === "none" ? "none" : (insulation === "basic" ? "#f0e68c" : "#ffcccb");
+      // слои
+      let svg = `<svg width="${svgW}" height="${svgH}">
+        <g>
+          <!-- Тень -->
+          <ellipse cx="${baseX}" cy="${baseY+5}" rx="${visDiameter/2+10}" ry="6" fill="#dadada"/>
+          <!-- Утепление -->
+          ${insulation !== "none" ? `<rect x="${baseX-visDiameter/2-6}" y="${baseY-visHeight-6}" width="${visDiameter+12}" height="${visHeight+12}" rx="10" fill="${insulColor}" stroke="#bbb" />` : ''}
+          <!-- Ствол -->
+          <rect x="${baseX-visDiameter/2}" y="${baseY-visHeight}" width="${visDiameter}" height="${visHeight}" rx="7" fill="${matColor}" stroke="#888" />
+          <!-- Крышка -->
+          <ellipse cx="${baseX}" cy="${baseY-visHeight}" rx="${visDiameter/2}" ry="7" fill="#eee" stroke="#bbb"/>
+        </g>
+      </svg>`;
+      return svg;
+    }
+
+    // Отрисовка визуализации при изменении параметров
+    function updateVis() {
+      const diameter = +document.getElementById('diameter').value;
+      const height = +document.getElementById('height').value;
+      const material = document.getElementById('material').value;
+      const insulation = document.getElementById('insulation').value;
+      document.getElementById('chimney-vis').innerHTML = renderChimney({diameter, height, material, insulation});
+    }
+    document.getElementById('diameter').oninput = updateVis;
+    document.getElementById('height').oninput = updateVis;
+    document.getElementById('material').oninput = updateVis;
+    document.getElementById('insulation').oninput = updateVis;
+    window.onload = updateVis;
+
+    // Расчёт и вывод результата
+    document.getElementById('chimneyForm').onsubmit = function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(this).entries());
+      const diameter = +data.diameter;
+      const height = +data.height;
+      const material = data.material;
+      const insulation = data.insulation;
+
+      let price = 10000 + diameter * 12 + height * 1200;
+      if (material === 'ceramic') price += 7000;
+      if (insulation === 'basic') price += 2500;
+      if (insulation === 'premium') price += 6000;
+
+      document.getElementById('result').innerHTML = `
+        <b>Расчет:</b><br>
+        Диаметр: ${diameter} мм<br>
+        Высота: ${height} м<br>
+        Материал: ${material === 'steel' ? 'Нержавеющая сталь' : 'Керамика'}<br>
+        Утепление: ${
+          insulation === 'none' ? 'Без утепления' :
+          insulation === 'basic' ? 'Базовое' : 'Премиум'
+        }<br>
+        <b>Ориентировочная цена: ${price} руб.</b>
+      `;
+    }
+  </script>
+</body>
+</html>
